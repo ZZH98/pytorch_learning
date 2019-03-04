@@ -16,7 +16,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 batch_size = 16
 epoches = 50
-learning_rate = 0.0001
+learning_rate = 0.001
 n_classes = 17
 
 save_path = "./model/model.pth"
@@ -29,11 +29,10 @@ train_loader = torch.utils.data.DataLoader(train_dataset, batch_size = batch_siz
 test_dataset = torchvision.datasets.ImageFolder('./test', transform = data_transform)
 test_loader = torch.utils.data.DataLoader(test_dataset, batch_size = batch_size, shuffle = True)
 
-model = models.vgg16(pretrained = False)
+model = models.vgg16(pretrained = False, num_classes = n_classes)
 model = model.to(device)
 # choose SGD as optimizer
 optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate)
-# optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate)
 loss_func = nn.CrossEntropyLoss(size_average = False)
 
 def train():

@@ -157,16 +157,16 @@ class VGG16(tnn.Module):
         return vgg16_features, out
 
       
-vgg16 = VGG16()
-vgg16 = vgg16.to(device)
+model = VGG16()
+model = model.to(device)
 
 # Loss and Optimizer
-cost = tnn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(vgg16.parameters(), lr=learning_rate)
+loss_func = tnn.CrossEntropyLoss(size_average = False)
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 # Train the model
 for epoch in range(epoches):
-    vgg16.train()
+    model.train()
     for i, (images, labels) in enumerate(trainLoader):
     # for images, labels in trainLoader:
         images = images.to(device)
@@ -174,8 +174,8 @@ for epoch in range(epoches):
 
         # Forward + Backward + Optimize
         optimizer.zero_grad()
-        _, outputs = vgg16(images)
-        loss = cost(outputs, labels)
+        _, outputs = model(images)
+        loss = loss_func(outputs, labels)
         # outputs = F.log_softmax(outputs, dim = 1)
         # loss = F.nll_loss(outputs, labels)
         loss.backward()
@@ -185,14 +185,14 @@ for epoch in range(epoches):
             print ('Epoch %d, Loss. %.4f' %(i, loss.item()))
 
     # Test the model
-    vgg16.eval()
+    model.eval()
     correct = 0
     total = 0
 
     for images, labels in testLoader:
         images = images.to(device)
         labels = labels.to(device)
-        _, outputs = vgg16(images)
+        _, outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum()

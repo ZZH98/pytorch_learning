@@ -8,9 +8,10 @@ import torch.nn.functional as F
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-BATCH_SIZE = 16
-LEARNING_RATE = 0.01
-EPOCH = 5
+batch_size = 16
+learning_rate = 0.01
+epoches = 5
+n_classes = 10
 
 data_transform = transforms.Compose([
     transforms.RandomResizedCrop(224),
@@ -25,8 +26,8 @@ train_dataset = dsets.CIFAR10(root='./data', train=True, transform=data_transfor
 test_dataset = dsets.CIFAR10(root='./data', train=False, transform=data_transform, download=True)
 
 # Data loader
-trainLoader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=BATCH_SIZE, shuffle=True)
-testLoader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=BATCH_SIZE, shuffle=False)
+trainLoader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
+testLoader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 class VGG16(tnn.Module):
     def __init__(self):
@@ -138,8 +139,8 @@ class VGG16(tnn.Module):
         self.layer8 = tnn.Sequential(
 
             # 8 output layer
-            tnn.Linear(4096, 1000),
-            tnn.BatchNorm1d(1000),
+            tnn.Linear(4096, n_classes),
+            tnn.BatchNorm1d(n_classes),
             tnn.Softmax())
 
     def forward(self, x):
@@ -156,16 +157,16 @@ class VGG16(tnn.Module):
         return vgg16_features, out
 
       
-vgg16 = VGG16()
-vgg16 = vgg16.to(device)
+model = VGG16()
+model = model.to(device)
 
 # Loss and Optimizer
-cost = tnn.CrossEntropyLoss()
-optimizer = torch.optim.Adam(vgg16.parameters(), lr=LEARNING_RATE)
+loss_func = tnn.CrossEntropyLoss(size_average = False)
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
 # Train the model
-for epoch in range(EPOCH):
-    vgg16.train()
+for epoch in range(epoches):
+    model.train()
     for i, (images, labels) in enumerate(trainLoader):
     # for images, labels in trainLoader:
         images = images.to(device)
@@ -173,8 +174,8 @@ for epoch in range(EPOCH):
 
         # Forward + Backward + Optimize
         optimizer.zero_grad()
-        _, outputs = vgg16(images)
-        loss = cost(outputs, labels)
+        _, outputs = model(images)
+        loss = loss_func(outputs, labels)
         # outputs = F.log_softmax(outputs, dim = 1)
         # loss = F.nll_loss(outputs, labels)
         loss.backward()
@@ -184,14 +185,14 @@ for epoch in range(EPOCH):
             print ('Epoch %d, Loss. %.4f' %(i, loss.item()))
 
     # Test the model
-    vgg16.eval()
+    model.eval()
     correct = 0
     total = 0
 
     for images, labels in testLoader:
         images = images.to(device)
         labels = labels.to(device)
-        _, outputs = vgg16(images)
+        _, outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum()

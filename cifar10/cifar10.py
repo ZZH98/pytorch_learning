@@ -27,7 +27,7 @@ test_dataset = torchvision.datasets.CIFAR10(root='./data', train=False, transfor
 train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
-model = models.vgg16(pretrained = False)
+model = models.vgg16(pretrained = False, num_classes = n_classes)
 model = model.to(device)
 optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate, momentum = 0.5)
 loss_func = nn.CrossEntropyLoss(size_average = False)

@@ -22,8 +22,8 @@ data_transform = transforms.Compose([
     ])
 
 # cifar dataset
-train_dataset = dsets.CIFAR10(root='./data', train=True, transform=data_transform, download=True)
-test_dataset = dsets.CIFAR10(root='./data', train=False, transform=data_transform, download=True)
+train_dataset = dsets.CIFAR100(root='./data', train=True, transform=data_transform, download=True)
+test_dataset = dsets.CIFAR100(root='./data', train=False, transform=data_transform, download=True)
 
 # Data loader
 trainLoader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
@@ -126,7 +126,7 @@ class VGG16(tnn.Module):
             tnn.Linear(512*7*7, 4096),
             tnn.BatchNorm1d(4096),
             tnn.ReLU())
-            
+
 
         self.layer7 = tnn.Sequential(
 
@@ -156,7 +156,7 @@ class VGG16(tnn.Module):
 
         return vgg16_features, out
 
-      
+
 model = VGG16()
 model = model.to(device)
 

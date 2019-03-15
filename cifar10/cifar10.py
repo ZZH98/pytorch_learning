@@ -8,14 +8,16 @@ import torchvision.transforms as transforms
 import sys
 import os
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 batch_size = 32
-epoches = 5
+epoches = 30
 learning_rate = 0.001
 n_classes = 10
 
 save_path = "./model/model.pth"
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '12,13,14,15'
 
 data_transform = transforms.Compose([transforms.Resize((224, 224)), transforms.ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)) ])
 
@@ -28,15 +30,15 @@ train_loader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=bat
 test_loader = torch.utils.data.DataLoader(dataset=test_dataset, batch_size=batch_size, shuffle=False)
 
 model = models.vgg16(pretrained = False, num_classes = n_classes)
-model = model.to(device)
+model = model.cuda()
 optimizer = torch.optim.SGD(model.parameters(), lr = learning_rate, momentum = 0.5)
 loss_func = nn.CrossEntropyLoss(size_average = False)
 
 def train():
     model.train()
     for batch_idx, (data, label) in enumerate(train_loader):
-        data = data.to(device)
-        label = label.to(device)
+        data = data.cuda()
+        label = label.cuda()
         optimizer.zero_grad()
         output = model(data) # put data into net
         # loss = loss_func(output, label) # loss
@@ -49,13 +51,13 @@ def train():
             print("batch_idx = %d, train_loss = %f"%(batch_idx, loss.item()))
 
 def test():
-    model.eval() 
+    model.eval()
     total_loss = 0
     corr = 0
     for (data, label) in test_loader:
         torch.cuda.empty_cache()
-        data = data.to(device)
-        label = label.to(device)
+        data = data.cuda()
+        label = label.cuda()
         output = model(data)
         # total_loss += loss_func(output, label).item() # loss
         output = F.log_softmax(output, dim = 1)

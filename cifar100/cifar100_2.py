@@ -13,6 +13,10 @@ learning_rate = 0.01
 epoches = 5
 n_classes = 100
 
+dict = {'epoches': epoches, 'batch_size': batch_size, 'learning_rate': learning_rate, 'acc_record': [], 'loss_record': []}
+
+save_path = "./model/model.pth"
+
 data_transform = transforms.Compose([
     transforms.RandomResizedCrop(224),
     transforms.RandomHorizontalFlip(),
@@ -22,8 +26,8 @@ data_transform = transforms.Compose([
     ])
 
 # cifar dataset
-train_dataset = dsets.CIFAR10(root='./data', train=True, transform=data_transform, download=True)
-test_dataset = dsets.CIFAR10(root='./data', train=False, transform=data_transform, download=True)
+train_dataset = dsets.CIFAR100(root='./data', train=True, transform=data_transform, download=True)
+test_dataset = dsets.CIFAR100(root='./data', train=False, transform=data_transform, download=True)
 
 # Data loader
 trainLoader = torch.utils.data.DataLoader(dataset=train_dataset, batch_size=batch_size, shuffle=True)
@@ -162,13 +166,12 @@ model = model.to(device)
 
 # Loss and Optimizer
 loss_func = tnn.CrossEntropyLoss(size_average = False)
-optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+optimizer = torch.optim.Adam(model.parameters(), lr = learning_rate)
 
 # Train the model
 for epoch in range(epoches):
     model.train()
     for i, (images, labels) in enumerate(trainLoader):
-    # for images, labels in trainLoader:
         images = images.to(device)
         labels = labels.to(device)
 
@@ -193,11 +196,20 @@ for epoch in range(epoches):
         images = images.to(device)
         labels = labels.to(device)
         _, outputs = model(images)
+        loss = loss_func(outputs, labels)
+        loss.backward()
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
         correct += (predicted == labels).sum()
-
-    print('Test Accuracy of the model on the 10000 test images: %d %%' % (100 * correct / total))
+    acc = correct / len(testLoader.dataset)
+    print("%d/%d, acc = %f, test_loss = %f"%(correct, len(testLoader.dataset), acc, total))
+    dict['acc_record'].append(acc)
+    dict['loss_record'].append(loss)
+    if (epoch == epoches - 1):
+        dict['acc'] = acc
+        dict['loss'] = loss
 
 # Save the Trained Model
-torch.save(cnn.state_dict(), 'cnn.pkl')
+torch.save(model.state_dict(), save_path)
+with open("./record.json","w") as f:
+    json.dump(dict, 'f')

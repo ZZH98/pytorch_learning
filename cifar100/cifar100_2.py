@@ -6,7 +6,12 @@ from torch.autograd import Variable
 
 import torch.nn.functional as F
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+import sys
+import os
+
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+os.environ['CUDA_VISIBLE_DEVICES'] = '14,15'
 
 batch_size = 16
 learning_rate = 0.01
@@ -158,7 +163,7 @@ class VGG16(tnn.Module):
 
 
 model = VGG16()
-model = model.to(device)
+model = model.cuda()
 
 # Loss and Optimizer
 loss_func = tnn.CrossEntropyLoss(size_average = False)
@@ -169,8 +174,8 @@ for epoch in range(epoches):
     model.train()
     for i, (images, labels) in enumerate(trainLoader):
     # for images, labels in trainLoader:
-        images = images.to(device)
-        labels = labels.to(device)
+        images = images.cuda()
+        labels = labels.cuda()
 
         # Forward + Backward + Optimize
         optimizer.zero_grad()
@@ -182,7 +187,7 @@ for epoch in range(epoches):
         optimizer.step()
 
         if (i) % 100 == 0 :
-            print ('Epoch %d, Loss. %.4f' %(i, loss.item()))
+            print ('batch_idx =  %d, loss = %.4f' %(i, loss.item()))
 
     # Test the model
     model.eval()
@@ -190,8 +195,8 @@ for epoch in range(epoches):
     total = 0
 
     for images, labels in testLoader:
-        images = images.to(device)
-        labels = labels.to(device)
+        images = images.cuda()
+        labels = labels.cuda()
         _, outputs = model(images)
         _, predicted = torch.max(outputs.data, 1)
         total += labels.size(0)
